@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Student Assistant</title>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <!-- Environment variables for client scripts -->
+  <script>
+    // This script exposes environment variables to global scripts
+    // Will be populated by Vite during build
+    window.VITE_API_URL = "";
+  </script>
+  
+  <!-- Voice Recognition Client - Load after DOM is ready -->
+  <script>
+    // Load the voice client after the page loads to avoid Vite processing
+    document.addEventListener('DOMContentLoaded', function() {
+      const script = document.createElement('script');
+      script.src = '/static/voice_recognition/js/voice_client.js';
+      document.body.appendChild(script);
+    });
+  </script>
+  
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html> 

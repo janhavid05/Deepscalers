@@ -1,0 +1,2 @@
+backend/whisper_cpp/ggml-base.en.bin filter=lfs diff=lfs merge=lfs -text
+*.bin filter=lfs diff=lfs merge=lfs -text

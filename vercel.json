@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "framework": "vite",
+  "buildCommand": "vite build && mkdir -p dist/static/voice_recognition/js && cp static/voice_recognition/js/voice_client.js dist/static/voice_recognition/js/",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/static/(.*)", "destination": "/static/$1" },
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/debug", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "env": {
+    "VITE_API_URL": "https://deepscalers-backend-production.up.railway.app/api"
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
+      ]
+    }
+  ]
+}

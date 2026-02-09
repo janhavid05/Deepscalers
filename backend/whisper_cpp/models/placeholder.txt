@@ -1,0 +1,10 @@
+This is a placeholder file for the Whisper.cpp model directory.
+
+For actual usage, you would need to:
+1. Download the Whisper.cpp model files from:
+   https://huggingface.co/ggerganov/whisper.cpp/tree/main
+
+2. Place the ggml-base.en.bin file in this directory.
+
+The model file is approximately 148MB and provides good quality
+transcription for English language audio. 

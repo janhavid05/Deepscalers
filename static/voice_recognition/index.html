@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recognition Client</title>
+    <script src="js/voice_client.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0d6efd;
+            margin-top: 0;
+        }
+        button {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0b5ed7;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        #status, #result, #error {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        #status {
+            background-color: #e2f3f5;
+            color: #0c9;
+        }
+        #result {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        #error {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Voice Recognition Client</h1>
+        <p>This page initializes the voice recognition client that can be used by the main application.</p>
+        
+        <div>
+            <label for="microphone-select">Microphone: </label>
+            <select id="microphone-select"></select>
+            <button id="refresh-mics">Refresh</button>
+        </div>
+        
+        <div>
+            <button id="start-recognition">Start Recognition</button>
+            <button id="stop-recognition" disabled>Stop Recognition</button>
+        </div>
+        
+        <div id="status">Status: Client initialized</div>
+        <div id="result" style="display: none;"></div>
+        <div id="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Initialize the voice client when the page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Create global voice recognition client instance
+            if (!window.voiceClient) {
+                window.voiceClient = new VoiceRecognitionClient();
+            }
+            
+            const voiceClient = window.voiceClient;
+            const statusElement = document.getElementById('status');
+            const resultElement = document.getElementById('result');
+            const errorElement = document.getElementById('error');
+            const micSelect = document.getElementById('microphone-select');
+            const startButton = document.getElementById('start-recognition');
+            const stopButton = document.getElementById('stop-recognition');
+            const refreshMicsButton = document.getElementById('refresh-mics');
+            
+            // Set up callbacks
+            voiceClient.setStatusCallback((status) => {
+                statusElement.textContent = `Status: ${status}`;
+                statusElement.style.display = 'block';
+            });
+            
+            voiceClient.setErrorCallback((error) => {
+                errorElement.textContent = `Error: ${error}`;
+                errorElement.style.display = 'block';
+                setTimeout(() => {
+                    errorElement.style.display = 'none';
+                }, 5000);
+            });
+            
+            voiceClient.setRecognitionResultCallback((result) => {
+                if (result && result.text) {
+                    resultElement.textContent = `Recognized: "${result.text}" (Confidence: ${Math.round(result.confidence * 100)}%)`;
+                    resultElement.style.display = 'block';
+                }
+                
+                // Update button states
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            });
+            
+            // Function to load available microphones
+            async function loadMicrophones() {
+                const mics = await voiceClient.getMicrophones();
+                
+                // Clear existing options
+                micSelect.innerHTML = '';
+                
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = -1;
+                defaultOption.textContent = 'Default Microphone';
+                micSelect.appendChild(defaultOption);
+                
+                // Add available microphones
+                mics.forEach((mic, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = mic.label || `Microphone ${index + 1}`;
+                    micSelect.appendChild(option);
+                });
+            }
+            
+            // Load microphones on page load
+            await loadMicrophones();
+            
+            // Set up event listeners
+            micSelect.addEventListener('change', async () => {
+                const selectedIndex = parseInt(micSelect.value, 10);
+                if (selectedIndex >= 0) {
+                    await voiceClient.setMicrophone(selectedIndex);
+                }
+            });
+            
+            refreshMicsButton.addEventListener('click', loadMicrophones);
+            
+            startButton.addEventListener('click', async () => {
+                resultElement.style.display = 'none';
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                
+                await voiceClient.startRecognition();
+            });
+            
+            stopButton.addEventListener('click', () => {
+                voiceClient.stopRecognition();
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            });
+            
+            // Log that initialization is complete
+            console.log('Voice Recognition Client page loaded and initialized');
+        });
+    </script>
+</body>
+</html> 

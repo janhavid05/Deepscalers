@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build && mkdir -p dist/static/voice_recognition/js && cp static/voice_recognition/js/voice_client.js dist/static/voice_recognition/js/"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "16"
+
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

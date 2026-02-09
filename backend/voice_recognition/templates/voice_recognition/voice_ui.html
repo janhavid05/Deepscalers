@@ -1,0 +1,239 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recognition</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .voice-recognition-container {
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #4285f4;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3367d6;
+        }
+        
+        .btn-secondary {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e2e2e2;
+        }
+        
+        .status-indicator {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        
+        .result-display {
+            margin-top: 20px;
+            min-height: 100px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .microphone-select {
+            margin-bottom: 20px;
+        }
+        
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+        }
+        
+        .listening {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="voice-recognition-container">
+        <h1>Voice Recognition</h1>
+        
+        <div class="microphone-select">
+            <h3>Select Microphone</h3>
+            <select id="microphone-select">
+                <option value="">Loading microphones...</option>
+            </select>
+        </div>
+        
+        <div class="controls">
+            <button id="start-recognition" class="btn btn-primary">Start Listening</button>
+            <button id="stop-recognition" class="btn btn-secondary" disabled>Stop</button>
+        </div>
+        
+        <div class="status-indicator" id="status">
+            Status: Ready
+        </div>
+        
+        <div class="result-display">
+            <h3>Recognized Text</h3>
+            <p id="recognition-result">Nothing recognized yet. Click "Start Listening" to begin.</p>
+        </div>
+        
+        <div class="result-display">
+            <h3>Command Response</h3>
+            <p id="command-response">No commands detected yet.</p>
+        </div>
+    </div>
+
+    <script src="{% static 'voice_recognition/js/voice_client.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize voice recognition client
+            const voiceClient = new VoiceRecognitionClient();
+            
+            // Get DOM elements
+            const microphoneSelect = document.getElementById('microphone-select');
+            const startButton = document.getElementById('start-recognition');
+            const stopButton = document.getElementById('stop-recognition');
+            const statusElement = document.getElementById('status');
+            const resultElement = document.getElementById('recognition-result');
+            const commandResponseElement = document.getElementById('command-response');
+            
+            // Set up callbacks
+            voiceClient.setStatusChangeCallback(function(status) {
+                statusElement.textContent = `Status: ${status}`;
+                if (status.toLowerCase().includes('listening')) {
+                    statusElement.classList.add('listening');
+                } else {
+                    statusElement.classList.remove('listening');
+                }
+            });
+            
+            voiceClient.setErrorCallback(function(error) {
+                statusElement.textContent = `Error: ${error}`;
+                statusElement.style.color = 'red';
+                setTimeout(() => {
+                    statusElement.style.color = '';
+                }, 3000);
+            });
+            
+            voiceClient.setRecognitionResultCallback(function(result) {
+                if (result.text) {
+                    resultElement.textContent = result.text;
+                }
+                
+                if (result.command_recognized && result.command_response) {
+                    commandResponseElement.textContent = result.command_response;
+                }
+            });
+            
+            // Load available microphones
+            async function loadMicrophones() {
+                const microphones = await voiceClient.getAvailableMicrophones();
+                microphoneSelect.innerHTML = '';
+                
+                if (microphones.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No microphones found';
+                    microphoneSelect.appendChild(option);
+                    startButton.disabled = true;
+                } else {
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Default microphone';
+                    microphoneSelect.appendChild(defaultOption);
+                    
+                    // Add available microphones
+                    microphones.forEach((mic, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = mic;
+                        microphoneSelect.appendChild(option);
+                    });
+                }
+            }
+            
+            // Handle microphone selection
+            microphoneSelect.addEventListener('change', function() {
+                if (this.value) {
+                    voiceClient.setMicrophone(parseInt(this.value));
+                } else {
+                    voiceClient.setMicrophone(null);
+                }
+            });
+            
+            // Handle start button
+            startButton.addEventListener('click', async function() {
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                statusElement.textContent = 'Status: Listening...';
+                statusElement.classList.add('listening');
+                
+                await voiceClient.startRecognition();
+                
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                statusElement.classList.remove('listening');
+            });
+            
+            // Handle stop button
+            stopButton.addEventListener('click', function() {
+                // This is a placeholder as our API doesn't support continuous listening yet
+                statusElement.textContent = 'Status: Ready';
+                statusElement.classList.remove('listening');
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            });
+            
+            // Initialize
+            loadMicrophones();
+        });
+    </script>
+</body>
+</html> 
