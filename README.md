@@ -117,5 +117,5 @@ This is a front-end only implementation using dummy data. In a production enviro
 
 - Integration with actual AI models (e.g., OpenAI, Anthropic)
 - Real-time notifications
-- File management system for assignments
+- File management system for assignments and homeworks
 - More interactive components like whiteboard and code editor 
